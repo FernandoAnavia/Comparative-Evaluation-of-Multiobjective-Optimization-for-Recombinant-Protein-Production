@@ -20,4 +20,4 @@ Thirty independent runs were performed for each configuration. Performance was e
 
 ## Authors
 
-José Fernando González-Anavia, Adriana Lara López, and Ponciano Jorge Escamilla Ambrosio.
+José Fernando González-Anavia, Adriana Lara-López, and Ponciano Jorge Escamilla-Ambrosio.
