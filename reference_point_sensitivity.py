@@ -1,19 +1,3 @@
-"""Hypervolume reference-point sensitivity analysis.
-
-The script reads run-level non-dominated solutions from Python and MATLAB,
-validates that each proposed reference point is dominated by every point in every
-front, and recomputes hypervolume for each run. It then reports mean/SD/median,
-mean ranks, and rank stability across reference points.
-
-Default expected files:
-- solutions_recuperado.csv
-- matlab_fmincon_solutions_nd_30runs.csv
-
-The second file was not included in the reviewed package. Use --allow-partial to
-run the evolutionary configurations only; for the manuscript, run without that
-flag after adding the MATLAB front-level file.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
