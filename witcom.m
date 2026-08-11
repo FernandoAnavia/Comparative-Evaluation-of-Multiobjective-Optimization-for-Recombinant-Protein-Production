@@ -1,12 +1,3 @@
-% ============================================================
-% Witcon_full.m
-% ============================================================
-% Comparación justa de MATLAB/fmincon contra Python/pymoo.
-%
-% Incluye: 30 semillas, HV, Spacing, IGD+, Epsilon (referencia interna),
-% Wilcoxon, Friedman, Holm.
-% ============================================================
-
 clc; close all;
 
 SCRIPT_FULLPATH = mfilename('fullpath');
@@ -23,9 +14,8 @@ cleanup_obj = onCleanup(@() restore_environment(ORIGINAL_PWD, ORIGINAL_PATH));
 
 prepare_fmincon_environment(SCRIPT_DIR);
 
-% ============================================================
+
 % CONFIGURACIÓN GENERAL
-% ============================================================
 
 SAVE_FILES = true;
 MAKE_PLOTS = false;
@@ -56,14 +46,13 @@ configs(2).n_weights = 100;
 configs(2).n_restarts = 1;
 
 fprintf('\n============================================================\n');
-fprintf('FMINCON - comparación justa contra Python/pymoo\n');
+fprintf('FMINCON - comparación contra Python/pymoo\n');
 fprintf('============================================================\n');
-fprintf('Modelo original, sin cache, con IGD+ y epsilon.\n');
+fprintf('Modelo original\n');
 fprintf('============================================================\n\n');
 
-% ============================================================
+
 % PARÁMETROS DEL MODELO
-% ============================================================
 
 P.kg = 1.53;
 P.Kg = 0.09;
@@ -91,9 +80,8 @@ P.PRODUCTIVITY_SCALE = PRODUCTIVITY_SCALE;
 P.YIELD_SCALE = YIELD_SCALE;
 P.CLEANER_PRODUCES_PROTEIN = CLEANER_PRODUCES_PROTEIN;
 
-% ============================================================
+
 % OPCIONES FMINCON
-% ============================================================
 
 options = optimoptions('fmincon', ...
     'Algorithm', 'interior-point', ...
@@ -107,9 +95,8 @@ options = optimoptions('fmincon', ...
     'FiniteDifferenceStepSize', [1e-4, 1e-4, 1e-5], ...
     'ScaleProblem', 'obj-and-constr');
 
-% ============================================================
+
 % PREFLIGHT
-% ============================================================
 
 rng(2);
 
@@ -144,9 +131,8 @@ fprintf('Preflight mejor rendimiento: %.9f\n', max(preflight_objectives(:,2)));
 fprintf('Preflight HV banco aleatorio: %.9f\n', preflight_hv);
 fprintf('Preflight no dominadas: %d\n\n', size(preflight_nd,1));
 
-% ============================================================
+
 % EJECUCIÓN PRINCIPAL
-% ============================================================
 
 all_algorithm = {};
 all_seed = [];
@@ -162,7 +148,7 @@ all_successful_weight_solutions = [];
 all_fmincon_runs = [];
 
 all_solution_tables = {};
-all_fronts = struct();   % Guardaremos frentes para calcular referencia
+all_fronts = struct();
 
 row_id = 0;
 
@@ -368,7 +354,6 @@ for c = 1:length(configs)
 
         all_solution_tables{row_id,1} = T_nd;
 
-        % Guardar frente para cálculo de referencia
         all_fronts(row_id).algorithm = config.name;
         all_fronts(row_id).seed = seed;
         all_fronts(row_id).points_nd = points_nd;
@@ -386,11 +371,7 @@ for c = 1:length(configs)
     end
 end
 
-% ============================================================
-% Cálculo de referencia interna de MATLAB y métricas IGD+, Epsilon
-% ============================================================
-
-% Construir referencia a partir de todos los frentes
+% Referencia a partir de todos los frentes
 all_points = [];
 for i = 1:length(all_fronts)
     if ~isempty(all_fronts(i).points_nd)
@@ -404,7 +385,6 @@ else
     ref_front = [];
 end
 
-% Añadir columnas IGD_plus y Epsilon a las métricas
 all_IGD_plus = zeros(length(all_fronts), 1);
 all_Epsilon = zeros(length(all_fronts), 1);
 
@@ -426,9 +406,8 @@ else
     all_Epsilon(:) = inf;
 end
 
-% ============================================================
+
 % TABLAS FINALES
-% ============================================================
 
 metrics = table( ...
     all_algorithm, ...
@@ -524,9 +503,8 @@ assignin('base', 'outputs', outputs);
 assignin('base', 'metrics', metrics);
 assignin('base', 'summary', summary);
 
-% ============================================================
-% FUNCIONES LOCALES (se incluyen todas)
-% ============================================================
+
+% FUNCIONES LOCALES
 
 function prepare_fmincon_environment(script_dir)
 
@@ -538,7 +516,6 @@ end
 
 cd(safe_dir);
 
-% --- Corrección para evitar el warning de rmpath ---
 try
     if ~isempty(script_dir) && exist(script_dir, 'dir')
         % Quitar del path solo si realmente está incluido
@@ -549,7 +526,6 @@ try
     end
 catch
 end
-% ----------------------------------------------------
 
 rehash toolboxcache;
 
@@ -944,9 +920,8 @@ ev.H_total = H_total;
 end
 
 
-% ============================================================
+
 % TASAS BIOLÓGICAS
-% ============================================================
 
 function y = rgp(G, A, P)
 
@@ -1015,9 +990,8 @@ y = P.Yg * rgc(G, A, P) + P.Ya * raup_c(G, A, P);
 end
 
 
-% ============================================================
+
 % MÉTRICAS MULTIOBJETIVO
-% ============================================================
 
 function idx = nondominated_indices_max(points)
 
@@ -1116,9 +1090,7 @@ s = std(distances);
 end
 
 
-% ============================================================
 % IGD+ y Epsilon indicador (minimización)
-% ============================================================
 
 function val = igd_plus(A, Z)
     % A: aproximación (n x m), Z: referencia (k x m), ambos en minimización
@@ -1170,9 +1142,7 @@ function ref = compute_reference_front(fronts)
 end
 
 
-% ============================================================
 % ESTADÍSTICA
-% ============================================================
 
 function summary = summarize_metrics(metrics)
 
