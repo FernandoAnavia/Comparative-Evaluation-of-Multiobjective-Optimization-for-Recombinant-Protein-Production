@@ -1,23 +1,3 @@
-"""Updated statistical analysis for the WITCOM manuscript.
-
-Main corrections
-----------------
-1. Uses the same objective-vector post-processing for every configuration:
-   vectors are rounded to 8 decimals, duplicates are removed, and the
-   non-dominated set is reconstructed before cardinality and spacing.
-2. Uses the sample standard deviation (ddof=1) for spacing, matching MATLAB.
-3. Treats cross-platform runs as independent in the primary inference:
-   Kruskal-Wallis omnibus tests and Mann-Whitney U comparisons against NSGA-II.
-4. Applies a proper monotone Holm correction within each metric.
-5. Reports Cliff's delta and leaves cardinality/evaluation counts descriptive
-   because they are ceiling/tie-heavy or fixed by design.
-
-Expected files in the working directory:
-- metrics_recuperado.csv
-- solutions_recuperado.csv
-- matlab_fmincon_metrics_30runs.csv
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -41,7 +21,7 @@ ROUND_DECIMALS = 8
 
 
 def unique_nondominated_max(points: np.ndarray, decimals: int = ROUND_DECIMALS) -> np.ndarray:
-    """Return unique non-dominated points for a two-objective maximization problem."""
+    
     pts = np.asarray(points, dtype=float)
     if pts.size == 0:
         return np.empty((0, 2), dtype=float)
@@ -67,7 +47,7 @@ def unique_nondominated_max(points: np.ndarray, decimals: int = ROUND_DECIMALS) 
 
 
 def hypervolume_2d_max(points: np.ndarray, ref: tuple[float, float] = (0.0, 0.0)) -> float:
-    """Two-dimensional hypervolume for maximization."""
+
     pts = unique_nondominated_max(points)
     pts = pts[(pts[:, 0] > ref[0]) & (pts[:, 1] > ref[1])]
     if len(pts) == 0:
@@ -86,7 +66,7 @@ def hypervolume_2d_max(points: np.ndarray, ref: tuple[float, float] = (0.0, 0.0)
 
 
 def spacing_sample(points: np.ndarray) -> float:
-    """Sample SD of consecutive Euclidean distances after sorting by productivity."""
+    
     pts = unique_nondominated_max(points)
     if len(pts) < 3:
         return float("nan")
@@ -97,7 +77,7 @@ def spacing_sample(points: np.ndarray) -> float:
 
 def reconstruct_python_metrics(metrics: pd.DataFrame, solutions: pd.DataFrame) -> pd.DataFrame:
     required = {
-        "algorithm", "seed", "productivity_DH", "process_yield_H_Gin"
+      
     }
     missing = required.difference(solutions.columns)
     if missing:
@@ -173,7 +153,7 @@ def descriptive_summary(metrics: pd.DataFrame) -> pd.DataFrame:
 
 
 def cliffs_delta(x: np.ndarray, y: np.ndarray) -> float:
-    """Cliff's delta: P(X>Y)-P(X<Y)."""
+   
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
     greater = np.sum(x[:, None] > y[None, :])
@@ -193,7 +173,7 @@ def delta_magnitude(delta: float) -> str:
 
 
 def holm_adjust(p_values: list[float]) -> tuple[np.ndarray, np.ndarray]:
-    """Proper Holm adjusted p-values with monotonicity enforcement."""
+    
     p = np.asarray(p_values, dtype=float)
     m = len(p)
     order = np.argsort(p)
