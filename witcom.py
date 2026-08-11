@@ -27,9 +27,7 @@ from pymoo.decomposition.asf import ASF
 from pymoo.decomposition.aasf import AASF
 
 
-# ============================================================
 # CONFIGURACIÓN GENERAL
-# ============================================================
 
 N_GEN = 100
 POP_SIZE = 100
@@ -43,7 +41,7 @@ USE_OBJECTIVE_SCALING = True
 PRODUCTIVITY_SCALE = 1.20
 YIELD_SCALE = 0.36
 
-SAVE_FILES = True          # <-- Activar guardado
+SAVE_FILES = True
 MAKE_PLOTS = True
 
 N_RUNS = 30
@@ -75,9 +73,7 @@ ALGORITHM_COLORS = {
 }
 
 
-# ============================================================
 # PARÁMETROS ORIGINALES DEL MODELO
-# ============================================================
 
 kg = 1.53
 Kg = 0.09
@@ -102,9 +98,7 @@ kdeg = 0.0044
 Gin = 20.0
 
 
-# ============================================================
 # FUNCIONES BIOLÓGICAS ORIGINALES
-# ============================================================
 
 def rgp(G, A):
     return kg * G / (G + Kg) * theta_a / (A + theta_a)
@@ -147,9 +141,7 @@ def fc(G, A):
     return Yg * rgc(G, A) + Ya * raup_c(G, A)
 
 
-# ============================================================
 # EQUILIBRIOS AUXILIARES ORIGINALES
-# ============================================================
 
 def producer_equilibrium(Yhp, D):
     def equations(z):
@@ -196,9 +188,7 @@ def cleaner_glucose_equilibrium(Yhc, D):
     return sol.x[0]
 
 
-# ============================================================
 # RESTRICCIONES ORIGINALES
-# ============================================================
 
 def constraint_values(Yhp, Yhc, D):
     Da = (1 - Yhp) * Yg * l - kdeg
@@ -232,9 +222,7 @@ def is_feasible(Yhp, Yhc, D):
     return np.all(constraint_values(Yhp, Yhc, D) > 0)
 
 
-# ============================================================
 # EQUILIBRIO DE COEXISTENCIA ORIGINAL
-# ============================================================
 
 def coexistence_equilibrium(Yhp, Yhc, D):
     if not is_feasible(Yhp, Yhc, D):
@@ -263,9 +251,7 @@ def coexistence_equilibrium(Yhp, Yhc, D):
     return sol.x
 
 
-# ============================================================
 # OBJETIVOS ORIGINALES
-# ============================================================
 
 def evaluate_solution(Yhp, Yhc, D):
     eq = coexistence_equilibrium(Yhp, Yhc, D)
@@ -285,9 +271,7 @@ def evaluate_solution(Yhp, Yhc, D):
     return productivity, process_yield, Bp, Bc, G, A, Hp, Hc, H_total
 
 
-# ============================================================
 # PROBLEMA PYMOO ORIGINAL
-# ============================================================
 
 class ProteinConsortiumProblem(ElementwiseProblem):
 
@@ -369,9 +353,7 @@ class FeasibleSampling(Sampling):
         return np.array(X)
 
 
-# ============================================================
-# INDICADORES: HV, Spacing, IGD+, Epsilon
-# ============================================================
+# INDICADORES
 
 def to_positive(F):
     if len(F) == 0:
@@ -470,10 +452,7 @@ def spacing_metric(points):
 
 
 def igd_plus(A, Z):
-    """
-    IGD+ entre el conjunto A (aproximación) y el conjunto Z (referencia).
-    Ambos deben estar en espacio de minimización (objetivos negados).
-    """
+
     if len(Z) == 0 or len(A) == 0:
         return np.inf
 
@@ -485,11 +464,7 @@ def igd_plus(A, Z):
 
 
 def epsilon_indicator(A, Z):
-    """
-    Epsilon indicador aditivo (minimización).
-    A: aproximación, Z: referencia.
-    Devuelve el valor mínimo de epsilon tal que A epsilon-domina a Z.
-    """
+    
     if len(Z) == 0 or len(A) == 0:
         return np.inf
 
@@ -500,7 +475,7 @@ def epsilon_indicator(A, Z):
 
 
 def compute_reference_front(all_fronts):
-    """Construye el frente de referencia no dominado a partir de una lista de frentes (maximización)."""
+    
     all_points = []
     for front in all_fronts:
         if len(front) > 0:
@@ -508,15 +483,13 @@ def compute_reference_front(all_fronts):
     if not all_points:
         return np.empty((0, 2))
     pts = np.vstack(all_points)
-    # Convertir a minimización para usar NonDominatedSorting
+    # Convertir a minimización
     pts_neg = -pts
     idx = NonDominatedSorting().do(pts_neg, only_non_dominated_front=True)
     return pts[idx]
 
 
-# ============================================================
 # CALLBACK
-# ============================================================
 
 class SimpleCallback(Callback):
 
@@ -559,9 +532,7 @@ class SimpleCallback(Callback):
             })
 
 
-# ============================================================
 # ALGORITMOS
-# ============================================================
 
 def make_algorithm(algorithm_name, seed):
     sampling = FeasibleSampling(seed)
@@ -632,9 +603,7 @@ def make_algorithm(algorithm_name, seed):
     )
 
 
-# ============================================================
 # TABLA DE SOLUCIONES
-# ============================================================
 
 def build_solution_table(X, algorithm_name, seed):
     rows = []
@@ -667,9 +636,7 @@ def build_solution_table(X, algorithm_name, seed):
     return pd.DataFrame(rows)
 
 
-# ============================================================
-# EJECUTAR UN ALGORITMO UNA VEZ
-# ============================================================
+# EJECUCION POR ALGORITMO
 
 def run_one_algorithm(algorithm_name, seed):
     problem = ProteinConsortiumProblem()
@@ -732,14 +699,12 @@ def run_one_algorithm(algorithm_name, seed):
     }
 
 
-# ============================================================
 # 30 EJECUCIONES INDEPENDIENTES
-# ============================================================
 
 def run_all_independent_experiments():
     metric_rows = []
     solution_tables = []
-    all_fronts = []   # guardaremos los frentes (maximización) para referencia interna
+    all_fronts = []
 
     for alg in ALGORITHMS_TO_RUN:
         for seed in PRIME_SEEDS[:N_RUNS]:
@@ -756,7 +721,6 @@ def run_all_independent_experiments():
                     "Revisa que no se haya cambiado el cálculo de objetivos o HV.\n"
                 )
 
-            # Guardamos el frente de esta corrida (maximización)
             front = result["front"]
             all_fronts.append(front)
 
@@ -770,7 +734,6 @@ def run_all_independent_experiments():
                 "n_function_evaluations": result["n_function_evaluations"],
                 "n_feasible_evaluations": result["n_feasible_evaluations"],
                 "n_infeasible_evaluations": result["n_infeasible_evaluations"]
-                # IGD+ y Epsilon se añadirán después
             })
 
             df_solutions = build_solution_table(result["X_nd"], alg, seed)
@@ -785,13 +748,11 @@ def run_all_independent_experiments():
                 f"Eval={result['n_function_evaluations']}"
             )
 
-    # Calcular referencia interna de Python (usando todos los frentes obtenidos)
     ref_front = compute_reference_front(all_fronts)
     ref_neg = -ref_front
 
-    # Añadir IGD+ y Epsilon a cada fila de métricas
     for i, row in enumerate(metric_rows):
-        A = all_fronts[i]  # frente de esa corrida (maximización)
+        A = all_fronts[i]
         if len(A) > 0 and len(ref_front) > 0:
             A_neg = -A
             row["IGD_plus"] = igd_plus(A_neg, ref_neg)
@@ -810,9 +771,7 @@ def run_all_independent_experiments():
     return metrics_df, solutions_df
 
 
-# ============================================================
 # ESTADÍSTICA
-# ============================================================
 
 def summarize_metrics(metrics_df):
     return metrics_df.groupby("algorithm").agg(
@@ -1023,9 +982,7 @@ def run_statistics(metrics_df):
     return friedman_df, wilcoxon_df, holm_df
 
 
-# ============================================================
-# GRÁFICA OPCIONAL
-# ============================================================
+# GRÁFICA
 
 def plot_boxplots(metrics_df):
     metrics = [
@@ -1053,15 +1010,12 @@ def plot_boxplots(metrics_df):
         plt.show()
 
 
-# ============================================================
-# MAIN
-# ============================================================
+# MÉTODO MAIN
 
 def main():
     warnings.filterwarnings("ignore")
 
     print("\nEjecutando 30 corridas independientes con IGD+ y epsilon.")
-    print("Se conserva el modelo original, HV original y spacing original.\n")
 
     metrics_df, solutions_df = run_all_independent_experiments()
 
